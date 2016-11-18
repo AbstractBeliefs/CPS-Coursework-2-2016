@@ -1,0 +1,22 @@
+# Latex
+*.log
+*.aux
+*.out
+*.pdf
+*.toc
+*.bbl
+*.blg
+
+# C/C++
+*.o
+*.out
+
+# Profiling
+*.png
+*.svg
+*.perf
+*.csv
+palette.map
+
+# Vim
+*.swp
