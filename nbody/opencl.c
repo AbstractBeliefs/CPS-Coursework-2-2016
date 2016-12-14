@@ -6,30 +6,65 @@
 
 #define M_PI 3.14159265358979323846
  
-const char *kernelSource =                                      "\n" \
-"__kernel void n_body(  __global double *rx,                     \n" \
-"                       __global double *ry,                     \n" \
-"                       __global double *vx,                     \n" \
-"                       __global double *vy,                     \n" \
-"                       __global double *mass,                   \n" \
-"                       const unsigned int steps,                \n" \
-"                       const unsigned int n)                    \n" \
-"{                                                               \n" \
-"    // Get thread ID                                            \n" \
-"    int id = get_global_id(0);                                  \n" \
-"                                                                \n" \
-"    if (id < n) {                                               \n" \
-"        rx[id] = rx[id] + 1;                                    \n" \
-"        ry[id] = ry[id] + 0.5;                                  \n" \
-"    }                                                           \n" \
-"}                                                               \n" \
-                                                                "\n" ;
+const char *kernelSource =                                     "\n" \
+"__kernel void n_body(  __global double *rx,                    \n" \
+"                       __global double *ry,                    \n" \
+"                       __global double *vx,                    \n" \
+"                       __global double *vy,                    \n" \
+"                       __global double *mass,                  \n" \
+"                       const unsigned long steps,              \n" \
+"                       const unsigned int n)                   \n" \
+"{                                                              \n" \
+"    // Get thread ID                                           \n" \
+"    int id = get_global_id(0);                                 \n" \
+"                                                               \n" \
+"    double force;                                              \n" \
+"    double fx;                                                 \n" \
+"    double fy;                                                 \n" \
+"                                                               \n" \
+"    double distance;                                           \n" \
+"    double dx;                                                 \n" \
+"    double dy;                                                 \n" \
+"                                                               \n" \
+"    double d_vx;                                               \n" \
+"    double d_vy;                                               \n" \
+"    if (id < n) {                                              \n" \
+"        for (long step = 0; step < steps; step++){             \n" \
+"            fx = 0;                                            \n" \
+"            fy = 0;                                            \n" \
+"            for (int m2 = 0; m2 < n; m2++){                    \n" \
+"                if (m2 == id) { continue; }                    \n" \
+"                dx = rx[id] - rx[m2];                          \n" \
+"                dy = ry[id] - ry[m2];                          \n" \
+"                                                               \n" \
+"                distance = sqrt(dx*dx + dy*dy);                \n" \
+"                force = 6.674e-11 * (mass[id] * mass[m2] / distance);  \n" \
+"                fx += force * (dx / distance);                 \n" \
+"                fy += force * (dy / distance);                 \n" \
+"            }                                                  \n" \
+"        // acceleration = force / mass                         \n" \
+"        d_vx = fx / mass[id];                                  \n" \
+"        d_vy = fy / mass[id];                                  \n" \
+"                                                               \n" \
+"        // speed = time * acceleration                         \n" \
+"        vx[id] += 1 * d_vx;                                    \n" \
+"        vy[id] += 1 * d_vy;                                    \n" \
+"                                                               \n" \
+"        // distance = time * speed                             \n" \
+"        rx[id] += 1 * vx[id]; // We just did a double x/y add?!                            \n" \
+"        ry[id] += 1 * vy[id]; // Oh, distance is the double-integration of acceleration!   \n" \
+"                                                               \n" \
+"        }                                                      \n" \
+"                                                               \n" \
+"    }                                                          \n" \
+"}                                                              \n" \
+                                                               "\n" ;
  
 int main(int argc, char* argv[])
 {
     // Number of bodies
     unsigned int n = 10;
-    unsigned int steps = 1000;
+    unsigned long steps = 1000;
  
     // Host vectors
     double *h_rx, *h_rx_after;  // X location
@@ -71,7 +106,7 @@ int main(int argc, char* argv[])
         h_ry[i] = (rand() % 201) - 100;
         h_vx[i] = 0;
         h_vy[i] = 0;
-        h_radius[i] = rand() % 10;
+        h_radius[i] = (rand() % 9)+1;
         h_mass[i] = h_radius[i] * h_radius[i] * M_PI;
     }
  
@@ -149,7 +184,7 @@ int main(int argc, char* argv[])
     err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &d_vx);        // vx
     err |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &d_vy);        // vy
     err |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &d_mass);      // mass
-    err |= clSetKernelArg(kernel, 5, sizeof(unsigned int), &steps); // steps
+    err |= clSetKernelArg(kernel, 5, sizeof(unsigned long), &steps);// steps
     err |= clSetKernelArg(kernel, 6, sizeof(unsigned int), &n);     // n
     if (err != CL_SUCCESS){
         fprintf(stderr, "Setting kernel arguments failed\n");
