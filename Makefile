@@ -1,5 +1,5 @@
 CC = gcc
-override CFLAGS := -std=c99 -lm -fopenmp -O3 $(CFLAGS)
+override CFLAGS := -std=c99 -lm -lSDL2 -lSDL2_gfx -fopenmp -O3 $(CFLAGS)
 
 SOURCES = $(wildcard nbody/*.c)
 EXECUTABLES = $(SOURCES:.c=.out)
