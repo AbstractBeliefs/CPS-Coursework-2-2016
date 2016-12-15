@@ -38,7 +38,7 @@ const char *kernelSource =                                     "\n" \
 "                dy = ry[id] - ry[m2];                          \n" \
 "                                                               \n" \
 "                distance = sqrt(dx*dx + dy*dy + 0.0001);       \n" \
-"                force = -6.674e-11 * (mass[id] * mass[m2] / distance); \n" \
+"                force = -6.674e-11 * (mass[id] * mass[m2] / distance);  \n" \
 "                fx += force * (dx / distance);                 \n" \
 "                fy += force * (dy / distance);                 \n" \
 "            }                                                  \n" \
@@ -190,26 +190,39 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Setting kernel arguments failed\n");
         return err;
     }
- 
-    // Execute the kernel over the entire range of the data set  
-    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &globalSize, &localSize, 0, NULL, NULL);
-    if (err != CL_SUCCESS){
-        fprintf(stderr, "Executing kernel failed\n");
-        return err;
-    }
 
-    // Wait for the command queue to get serviced before reading back results
-    clFinish(queue);
- 
-    // Read the results from the device
-    clEnqueueReadBuffer(queue, d_rx, CL_TRUE, 0, n*sizeof(double), h_rx_after, 0, NULL, NULL );
-    clEnqueueReadBuffer(queue, d_ry, CL_TRUE, 0, n*sizeof(double), h_ry_after, 0, NULL, NULL );
- 
-    // Sum up vector c and print result divided by n, this should equal 1 within error
-    for(int i=0; i<n; i++){
-        printf("Body %d: (%10.5f, %10.5f)\n", i,h_rx[i],h_ry[i]);
-        printf("     -> (%10.5f, %10.5f)\n\n", h_rx_after[i],h_ry_after[i]);
+
+    // Open log file for later rendering
+    FILE* rdata = fopen("rdata.py", "w");
+    if (rdata == NULL){
+        fprintf(stderr, "Couldn't open render.json");
     }
+    fprintf(rdata, "data = [\n");
+
+    // Execute the kernel over the entire range of the data set
+    for (int i = 0; i < 100; i++){
+        for (int j = 0; j < 10; j++){
+            err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &globalSize, &localSize, 0, NULL, NULL);
+            if (err != CL_SUCCESS){
+                fprintf(stderr, "Executing kernel failed\n");
+                return err;
+            }
+        }
+        clFinish(queue);
+        // Read the results from the device
+        clEnqueueReadBuffer(queue, d_rx, CL_TRUE, 0, n*sizeof(double), h_rx_after, 0, NULL, NULL );
+        clEnqueueReadBuffer(queue, d_ry, CL_TRUE, 0, n*sizeof(double), h_ry_after, 0, NULL, NULL );
+        clFinish(queue);
+
+        fprintf(rdata, "\t[");
+        for (int i = 0; i < n; i++){
+            fprintf(rdata, "[%d, %d, %d],", (int)h_rx_after[i], (int)h_ry_after[i], h_radius[i]);
+        }
+        fprintf(rdata, "],\n");
+        fprintf(stderr, "Finished iterations %d - %d.\n", i*10, i*10+9);
+    }
+    fprintf(rdata, "]");
+    fclose(rdata);
  
     // Release OpenCL resources
     clReleaseMemObject(d_rx);
