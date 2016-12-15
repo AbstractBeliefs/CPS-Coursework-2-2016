@@ -37,7 +37,7 @@ const char *kernelSource =                                     "\n" \
 "                dx = rx[id] - rx[m2];                          \n" \
 "                dy = ry[id] - ry[m2];                          \n" \
 "                                                               \n" \
-"                distance = sqrt(dx*dx + dy*dy);                \n" \
+"                distance = sqrt(dx*dx + dy*dy + 0.0001);       \n" \
 "                force = 6.674e-11 * (mass[id] * mass[m2] / distance);  \n" \
 "                fx += force * (dx / distance);                 \n" \
 "                fy += force * (dy / distance);                 \n" \
