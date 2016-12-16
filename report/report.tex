@@ -258,6 +258,11 @@
         From the above results, we see that for our given workload and kernel, performance peaks with 64-core
         workgroups. If we then compare the timings for this configuration with the CPU implementation, we can see a
         speedup of $ \frac{Sequential}{Parallel} = \frac{1141}{167.1} = 6.83\times $.
+        \begin{figure}[h]
+            \centering
+            \includegraphics[width=0.5\textwidth]{report/images/RuntimeVsImplementation.png}
+            \caption{Runtime vs Implementation}
+        \end{figure}
 
     \section{Conclusion}
     To conclude, this report covers an investigation of the N-body problem, particularly focussing on how GPUs can be
@@ -270,7 +275,6 @@
     simulation into line with GPU strengths, for example vectorisation of the force, acceleration, velocity and position
     properties of bodies within the simulation.
 
-    \newpage
 
     \appendices
     \section{CPU execution time measurements}
