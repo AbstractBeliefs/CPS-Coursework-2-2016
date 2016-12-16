@@ -190,8 +190,13 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Setting kernel arguments failed\n");
         return err;
     }
- 
-    // Execute the kernel over the entire range of the data set  
+
+    // Prepare timing
+    time_t start, end;
+
+    // Execute the kernel over the entire range of the data set
+    clFinish(queue);    // Purge the queue, be ready that when the time starts, we're running the kernel
+    start = time(NULL);
     err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &globalSize, &localSize, 0, NULL, NULL);
     if (err != CL_SUCCESS){
         fprintf(stderr, "Executing kernel failed\n");
@@ -200,6 +205,9 @@ int main(int argc, char* argv[])
 
     // Wait for the command queue to get serviced before reading back results
     clFinish(queue);
+    end = time(NULL);
+
+    printf("Time to execute kernel: %d\n", end-start);
  
     // Release OpenCL resources
     clReleaseMemObject(d_rx);

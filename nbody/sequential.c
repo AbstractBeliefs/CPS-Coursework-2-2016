@@ -79,7 +79,13 @@ int main(){
         bodies[i].mass = bodies[i].radius * bodies[i].radius * M_PI;
     }
 
-    step(bodies, NUM_BODIES, NUM_STEPS);
+    // Prepare timing
+    time_t start, end;
 
+    start = time(NULL);
+    step(bodies, NUM_BODIES, NUM_STEPS);
+    end = time(NULL);
+
+    printf("Time taken to step: %d\n", end-start);
     return 0;
 }
