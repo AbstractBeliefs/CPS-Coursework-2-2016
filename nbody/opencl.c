@@ -63,8 +63,8 @@ const char *kernelSource =                                     "\n" \
 int main(int argc, char* argv[])
 {
     // Number of bodies
-    unsigned int n = 100;
-    unsigned long steps = 1000;
+    unsigned int n = 1024;
+    unsigned long steps = 100000;
  
     // Host vectors
     double *h_rx, *h_rx_after;  // X location
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     cl_int err;
  
     // Number of work items in each local work group
-    localSize = 1;
+    localSize = 256;
  
     // Number of total work items - localSize must be devisor
     globalSize = ceil(n/(float)localSize)*localSize;
@@ -200,16 +200,6 @@ int main(int argc, char* argv[])
 
     // Wait for the command queue to get serviced before reading back results
     clFinish(queue);
- 
-    // Read the results from the device
-    clEnqueueReadBuffer(queue, d_rx, CL_TRUE, 0, n*sizeof(double), h_rx_after, 0, NULL, NULL );
-    clEnqueueReadBuffer(queue, d_ry, CL_TRUE, 0, n*sizeof(double), h_ry_after, 0, NULL, NULL );
- 
-    // Sum up vector c and print result divided by n, this should equal 1 within error
-    for(int i=0; i<n; i++){
-        printf("Body %d: (%10.5f, %10.5f)\n", i,h_rx[i],h_ry[i]);
-        printf("     -> (%10.5f, %10.5f)\n\n", h_rx_after[i],h_ry_after[i]);
-    }
  
     // Release OpenCL resources
     clReleaseMemObject(d_rx);

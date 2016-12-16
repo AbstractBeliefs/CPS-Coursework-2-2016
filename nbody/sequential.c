@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 #define M_PI 3.14159265358979323846
-#define NUM_BODIES 500
-#define NUM_STEPS 10
+#define NUM_BODIES 1024
+#define NUM_STEPS 100000
 
 typedef struct {
     double rx;
@@ -79,10 +79,7 @@ int main(){
         bodies[i].mass = bodies[i].radius * bodies[i].radius * M_PI;
     }
 
-    for (size_t i = 0; i < NUM_STEPS; i++){
-        printf("Step %zu.\n", i);
-        step(bodies, NUM_BODIES, 1000);
-    }
+    step(bodies, NUM_BODIES, NUM_STEPS);
 
     return 0;
 }
